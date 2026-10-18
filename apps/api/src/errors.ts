@@ -5,6 +5,7 @@ export class AppError extends Error {
     readonly statusCode: number,
     readonly code: string,
     message: string,
+    readonly details?: unknown,
   ) {
     super(message);
   }
@@ -13,7 +14,9 @@ export class AppError extends Error {
 export function registerErrorHandler(app: FastifyInstance) {
   app.setErrorHandler((err: FastifyError | AppError, request, reply) => {
     if (err instanceof AppError) {
-      return reply.code(err.statusCode).send({ error: { code: err.code, message: err.message } });
+      return reply.code(err.statusCode).send({
+        error: { code: err.code, message: err.message, details: err.details },
+      });
     }
 
     // Errors from Fastify itself or its plugins (bad JSON, wrong content type, ...).

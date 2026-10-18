@@ -3,6 +3,7 @@ import Fastify from "fastify";
 import { config } from "./config.js";
 import { registerErrorHandler } from "./errors.js";
 import { getHealth } from "./health.js";
+import { jobRoutes } from "./jobs/routes.js";
 import { uploadRoutes } from "./uploads/routes.js";
 
 export async function buildApp() {
@@ -24,6 +25,7 @@ export async function buildApp() {
   });
 
   await app.register(uploadRoutes);
+  await app.register(jobRoutes);
 
   return app;
 }

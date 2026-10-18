@@ -2,6 +2,7 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { Redis } from "ioredis";
 import pg from "pg";
 import { config } from "./config.js";
+import { audioQueue } from "./queue.js";
 
 export const db = new pg.Pool({ connectionString: config.DATABASE_URL });
 db.on("error", (err) => {
@@ -27,6 +28,6 @@ export const s3 = new S3Client({
 });
 
 export async function closeClients(): Promise<void> {
-  await Promise.allSettled([db.end(), redis.quit()]);
+  await Promise.allSettled([db.end(), redis.quit(), audioQueue.close()]);
   s3.destroy();
 }
