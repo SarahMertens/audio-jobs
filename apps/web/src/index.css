@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@import "@fontsource/public-sans/400.css";
+@import "@fontsource/public-sans/600.css";
+@import "@fontsource/public-sans/800.css";
+
+/* Design tokens: every color and the font are defined once, here. */
+@theme {
+  --font-sans: "Public Sans", system-ui, sans-serif;
+
+  --color-ink: #142425;
+  --color-muted: #556667;
+  --color-line: #dce3e3;
+  --color-soft: #f2f5f5;
+
+  --color-brand: #0f6e66;
+  --color-brand-soft: #e1f1ef;
+  --color-brand-line: #a9c7c3;
+
+  --color-ok: #1c7a4e;
+  --color-ok-soft: #e3f3ea;
+  --color-slow: #8f5a00;
+  --color-slow-soft: #fdf1dc;
+  --color-bad: #b0281f;
+  --color-bad-soft: #fbe9e7;
+}
+
+body {
+  @apply bg-white font-sans text-ink antialiased;
+}
+
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-brand;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+    animation-duration: 0s !important;
+  }
+}

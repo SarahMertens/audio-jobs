@@ -8,6 +8,7 @@
   "scripts": {
     "dev:api": "pnpm --filter @audio-jobs/api dev",
     "dev:worker": "pnpm --filter @audio-jobs/worker dev",
+    "dev:web": "pnpm --filter @audio-jobs/web dev",
     "db:migrate": "pnpm --filter @audio-jobs/api migrate",
     "typecheck": "pnpm -r typecheck",
     "stack:up": "docker compose up -d",
