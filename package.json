@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev:api": "pnpm --filter @audio-jobs/api dev",
+    "db:migrate": "pnpm --filter @audio-jobs/api migrate",
     "typecheck": "pnpm -r typecheck",
     "stack:up": "docker compose up -d",
     "stack:down": "docker compose down"
