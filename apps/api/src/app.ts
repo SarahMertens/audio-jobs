@@ -7,7 +7,7 @@ import { jobRoutes } from "./jobs/routes.js";
 import { uploadRoutes } from "./uploads/routes.js";
 
 export async function buildApp() {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: { level: config.LOG_LEVEL } });
 
   registerErrorHandler(app);
 

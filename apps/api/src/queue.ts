@@ -10,6 +10,7 @@ import { config } from './config.js';
 const PUBLISH_TIMEOUT_MS = 2000;
 
 export const audioQueue = new Queue<AudioJobMessage>(AUDIO_QUEUE_NAME, {
+  prefix: config.QUEUE_PREFIX,
   connection: {
     url: config.REDIS_URL,
     enableOfflineQueue: false,

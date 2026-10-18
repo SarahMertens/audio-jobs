@@ -12,6 +12,10 @@ const envSchema = z.object({
   MAX_UPLOAD_MB: z.coerce.number().int().positive().max(500).default(50),
   DEFAULT_RESULT_COUNT: z.coerce.number().int().min(1).max(100).default(5),
   MAX_RESULT_COUNT: z.coerce.number().int().min(1).max(100).default(20),
+  QUEUE_PREFIX: z.string().min(1).default('bull'),
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+    .default('info'),
 });
 
 const parsed = envSchema.safeParse(process.env);

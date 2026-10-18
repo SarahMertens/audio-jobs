@@ -3,7 +3,7 @@ import pg from "pg";
 import { pino } from "pino";
 import { config } from "./config.js";
 
-export const log = pino({ base: { service: "worker" } });
+export const log = pino({ level: config.LOG_LEVEL, base: { service: "worker" } });
 
 export const db = new pg.Pool({ connectionString: config.DATABASE_URL });
 

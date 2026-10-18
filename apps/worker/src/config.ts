@@ -24,6 +24,12 @@ const envSchema = z.object({
   STALE_QUEUED_SECONDS: z.coerce.number().int().min(10).default(60),
   // A running job without any progress update for this long lost its worker.
   STALE_RUNNING_SECONDS: z.coerce.number().int().min(30).default(300),
+
+  // Namespaces the queue keys in Redis; the tests use their own prefix.
+  QUEUE_PREFIX: z.string().min(1).default('bull'),
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+    .default('info'),
 });
 
 const parsed = envSchema.safeParse(process.env);
