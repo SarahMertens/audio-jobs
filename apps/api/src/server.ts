@@ -1,14 +1,8 @@
-import Fastify from "fastify";
+import { buildApp } from "./app.js";
 import { closeClients } from "./clients.js";
 import { config } from "./config.js";
-import { getHealth } from "./health.js";
 
-const app = Fastify({ logger: true });
-
-app.get("/health", async (_request, reply) => {
-  const health = await getHealth();
-  return reply.code(health.status === "ok" ? 200 : 503).send(health);
-});
+const app = await buildApp();
 
 async function shutdown(signal: string) {
   app.log.info({ signal }, "shutting down");

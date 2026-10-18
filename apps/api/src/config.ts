@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const envSchema = z.object({
   API_PORT: z.coerce.number().int().positive().default(3000),
@@ -9,12 +9,13 @@ const envSchema = z.object({
   S3_BUCKET: z.string().min(1),
   S3_ACCESS_KEY: z.string().min(1),
   S3_SECRET_KEY: z.string().min(1),
+  MAX_UPLOAD_MB: z.coerce.number().int().positive().max(500).default(50),
 });
 
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error("Invalid environment variables:");
+  console.error('Invalid environment variables:');
   console.error(z.prettifyError(parsed.error));
   process.exit(1);
 }

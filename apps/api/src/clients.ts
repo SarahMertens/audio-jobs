@@ -4,10 +4,16 @@ import pg from "pg";
 import { config } from "./config.js";
 
 export const db = new pg.Pool({ connectionString: config.DATABASE_URL });
+db.on("error", (err) => {
+  console.warn(`postgres: idle connection lost (${err.message})`);
+});
 
 export const redis = new Redis(config.REDIS_URL, {
   enableOfflineQueue: false,
   maxRetriesPerRequest: 1,
+});
+redis.on("error", (err) => {
+  console.warn(`redis: ${err.message}`);
 });
 
 export const s3 = new S3Client({
