@@ -5,8 +5,10 @@ export const AUDIO_JOB_NAME = "process-audio";
 // so the worker always reads the latest job state instead of a stale copy.
 export type AudioJobMessage = {
   jobId: string;
+  // The id of the HTTP request that created the job, so its logs can be linked to the worker's.
+  // Missing when the recovery sweep re-publishes a job.
+  requestId?: string;
 };
-
 // 1 first try + 3 retries. Must match the default of jobs.max_attempts in the database.
 export const MAX_ATTEMPTS = 4;
 // Waits between attempts: 2 s, 4 s, 8 s.

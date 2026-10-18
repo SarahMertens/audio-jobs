@@ -113,9 +113,11 @@ export async function jobRoutes(app: FastifyInstance) {
 
     const job = (await findJob(jobId))!;
 
+    request.log.info({ jobId: job.id, replayed }, replayed ? "job request replayed" : "job created");
+
     if (job.status === "queued") {
       try {
-        await publishJob(job.id);
+        await publishJob(job.id, request.id);
       } catch (err) {
         // The job is safely stored as 'queued'. The worker's recovery sweep re-publishes
         // queued jobs that were never picked up, so the client still gets a valid job.

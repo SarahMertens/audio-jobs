@@ -21,10 +21,13 @@ audioQueue.on('error', (err) => {
   console.warn(`queue: ${err.message}`);
 });
 
-export async function publishJob(jobId: string): Promise<void> {
+export async function publishJob(
+  jobId: string,
+  requestId?: string,
+): Promise<void> {
   const add = audioQueue.add(
     AUDIO_JOB_NAME,
-    { jobId },
+    { jobId, requestId },
     { jobId, ...AUDIO_JOB_OPTIONS },
   );
 

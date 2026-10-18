@@ -27,6 +27,8 @@ export type QueueDelivery = {
   // Earlier deliveries of this message that ended in an error.
   attemptsMade: number;
   maxAttempts: number;
+  // Links the worker's logs to the API request that created the job.
+  requestId?: string;
 };
 
 export type ProcessOutcome = 'completed' | 'skipped';
@@ -272,8 +274,15 @@ export async function processJob(
   }
 
   const { job } = claim;
-  const jobLog = log.child({ jobId, attempt: job.attempt_count });
-  jobLog.info('job started');
+  // Every log line for this attempt carries the job id, so `jobId` finds the whole story.
+  const jobLog = log.child({
+    jobId,
+    attempt: job.attempt_count,
+    requestId: delivery.requestId,
+  });
+  const startedAt = Date.now();
+  const elapsed = () => Date.now() - startedAt;
+  jobLog.info({ maxAttempts: job.max_attempts }, 'job started');
 
   try {
     const audio = await downloadAudio(job.storage_key);
@@ -293,7 +302,10 @@ export async function processJob(
     });
 
     await saveResults(job, validateResults(results, job.result_count));
-    jobLog.info({ resultCount: job.result_count }, 'job completed');
+    jobLog.info(
+      { resultCount: job.result_count, durationMs: elapsed() },
+      'job completed',
+    );
     return 'completed';
   } catch (err) {
     const error = toSafeError(err);
@@ -308,7 +320,7 @@ export async function processJob(
       const delayMs = retryDelayMs(delivery.attemptsMade + 1);
       await markRetrying(job, error, delayMs);
       jobLog.warn(
-        { code: error.code, delayMs, err },
+        { code: error.code, delayMs, durationMs: elapsed(), err },
         'job attempt failed, will retry',
       );
       // Throwing a normal error tells the queue to schedule the next attempt.
@@ -317,7 +329,12 @@ export async function processJob(
 
     await markFailed(job, error);
     jobLog.error(
-      { code: error.code, retryable: error.retryable, err },
+      {
+        code: error.code,
+        retryable: error.retryable,
+        durationMs: elapsed(),
+        err,
+      },
       'job failed',
     );
     // UnrecoverableError stops the queue from retrying and moves the message to the failed list.

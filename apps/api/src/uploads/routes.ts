@@ -95,6 +95,8 @@ export async function uploadRoutes(app: FastifyInstance) {
       await deleteObject(storageKey);
       throw err;
     }
+        // No file name in the logs: it can contain personal information.
+    request.log.info({ audioId: row.id, mimeType: row.mime_type, sizeBytes: Number(row.size_bytes) }, "audio uploaded");
 
     return reply.code(201).send({
       audioId: row.id,
