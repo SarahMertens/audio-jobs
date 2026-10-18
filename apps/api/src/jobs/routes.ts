@@ -1,3 +1,4 @@
+import { JOB_STATUSES } from "@audio-jobs/shared";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { db } from "../clients.js";
@@ -5,10 +6,12 @@ import { config } from "../config.js";
 import { AppError } from "../errors.js";
 import { publishJob } from "../queue.js";
 import {
+  type AttemptRow,
   JOB_COLUMNS,
   type JobRow,
   type ResultRow,
   statusUrl,
+  toAttemptResponse,
   toJobResponse,
   toResultResponse,
 } from "./job-view.js";
@@ -26,6 +29,11 @@ const createJobBody = z.object({
 const idempotencyKeyHeader = z.string().trim().min(1).max(200).optional();
 
 const jobIdParams = z.object({ id: z.uuid() });
+
+const listJobsQuery = z.object({
+  status: z.enum(JOB_STATUSES).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
 
 function validationError(error: z.ZodError): AppError {
   const details = error.issues.map((issue) => ({
@@ -120,6 +128,34 @@ export async function jobRoutes(app: FastifyInstance) {
       .header("Location", statusUrl(job.id))
       .header("Idempotent-Replayed", String(replayed))
       .send({ jobId: job.id, status: job.status, statusUrl: statusUrl(job.id) });
+  });
+
+  // With ?status=failed this is the dead-letter view: jobs that will not be retried anymore.
+  app.get("/jobs", async (request) => {
+    const query = listJobsQuery.safeParse(request.query);
+    if (!query.success) throw validationError(query.error);
+    const { status, limit } = query.data;
+
+    const jobs = await db.query<JobRow>(
+      `SELECT ${JOB_COLUMNS}
+       FROM jobs j JOIN audio_files a ON a.id = j.audio_file_id
+       WHERE $1::text IS NULL OR j.status = $1
+       ORDER BY j.created_at DESC
+       LIMIT $2`,
+      [status ?? null, limit],
+    );
+
+    return { jobs: jobs.rows.map(toJobResponse) };
+  });
+
+  app.get("/jobs/:id/attempts", async (request) => {
+    const job = await findJobFromParams(request.params);
+    const attempts = await db.query<AttemptRow>(
+      `SELECT attempt_number, status, error_code, error_message, retryable, started_at, finished_at
+       FROM job_attempts WHERE job_id = $1 ORDER BY attempt_number`,
+      [job.id],
+    );
+    return { jobId: job.id, attempts: attempts.rows.map(toAttemptResponse) };
   });
 
   app.get("/jobs/:id", async (request) => {

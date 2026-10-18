@@ -3,6 +3,9 @@ import { z } from "zod";
 export type ProcessorInput = {
   audio: Buffer;
   mimeType: string;
+  fileName: string;
+  // 1 for the first try, 2 for the first retry, ...
+  attempt: number;
   resultCount: number;
   // Reports progress between 0 and 100.
   onProgress: (percent: number) => Promise<void>;
