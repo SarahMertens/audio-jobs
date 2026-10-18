@@ -1,0 +1,14 @@
+{
+  "name": "audio-jobs",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @audio-jobs/api dev",
+    "typecheck": "pnpm -r typecheck",
+    "stack:up": "docker compose up -d",
+    "stack:down": "docker compose down"
+  }
+}
