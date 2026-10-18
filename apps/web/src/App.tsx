@@ -1,16 +1,50 @@
 import { useState } from "react";
+import { createJob } from "./api/client";
+import type { Job } from "./api/types";
 import { JobCard } from "./components/JobCard";
 import { UploadBox } from "./components/UploadBox";
 import { useJobs } from "./hooks/useJobs";
 import { useUpload } from "./hooks/useUpload";
 
+// The open file is kept in the address bar (?file=<jobId>), so it stays open after a refresh
+// and the link can be shared.
+function readOpenJob(): string | null {
+  return new URLSearchParams(window.location.search).get("file");
+}
+
+function writeOpenJob(jobId: string | null) {
+  const url = new URL(window.location.href);
+  if (jobId) url.searchParams.set("file", jobId);
+  else url.searchParams.delete("file");
+  window.history.replaceState(null, "", url);
+}
+
 export function App() {
   const { jobs, offline, refresh } = useJobs();
-  const [newestJobId, setNewestJobId] = useState<string | null>(null);
+  const [openJobId, setOpenJobId] = useState<string | null>(readOpenJob);
+  const [retryError, setRetryError] = useState<string | null>(null);
+
+  function openJob(jobId: string | null) {
+    setOpenJobId(jobId);
+    writeOpenJob(jobId);
+  }
+
   const upload = useUpload((jobId) => {
-    setNewestJobId(jobId);
+    openJob(jobId);
     void refresh();
   });
+
+  async function tryAgain(job: Job) {
+    setRetryError(null);
+    try {
+      // A new job for the same uploaded file; the failed one stays in the list as history.
+      const created = await createJob(job.audio.audioId, job.resultCount, crypto.randomUUID());
+      openJob(created.jobId);
+      void refresh();
+    } catch {
+      setRetryError("We couldn't start a new try. Check your connection and try again.");
+    }
+  }
 
   function goToUpload() {
     const box = document.getElementById("upload");
@@ -34,6 +68,11 @@ export function App() {
           We can't reach the server right now. We'll keep trying, and your files are safe.
         </p>
       )}
+      {retryError && (
+        <p role="alert" className="mt-6 rounded-lg bg-bad-soft px-4 py-3 text-bad">
+          {retryError}
+        </p>
+      )}
 
       <section aria-labelledby="files-title" className="mt-9">
         <h2 id="files-title" className="mb-3 text-lg font-extrabold">
@@ -50,7 +89,14 @@ export function App() {
 
         <div className="grid gap-2.5">
           {jobs?.map((job) => (
-            <JobCard key={job.jobId} job={job} highlighted={job.jobId === newestJobId} onUploadAnother={goToUpload} />
+            <JobCard
+              key={job.jobId}
+              job={job}
+              open={job.jobId === openJobId}
+              onToggle={() => openJob(job.jobId === openJobId ? null : job.jobId)}
+              onUploadAnother={goToUpload}
+              onTryAgain={() => void tryAgain(job)}
+            />
           ))}
         </div>
       </section>

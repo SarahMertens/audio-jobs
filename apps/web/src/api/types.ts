@@ -40,3 +40,28 @@ export type Job = {
   startedAt: string | null;
   finishedAt: string | null;
 };
+
+export type Result = {
+  position: number;
+  label: string;
+  text: string | null;
+  value: number | null;
+  confidence: number;
+  startMs: number | null;
+  endMs: number | null;
+};
+
+export type ResultsResponse = {
+  jobId: string;
+  resultCount: number;
+  results: Result[];
+};
+
+export type Attempt = {
+  attempt: number;
+  status: "running" | "succeeded" | "failed";
+  error: { code: string; message: string | null; retryable: boolean | null } | null;
+  startedAt: string;
+  finishedAt: string | null;
+  durationMs: number | null;
+};

@@ -1,4 +1,11 @@
-import type { ApiErrorBody, CreateJobResponse, Job, UploadResponse } from "./types";
+import type {
+  ApiErrorBody,
+  Attempt,
+  CreateJobResponse,
+  Job,
+  ResultsResponse,
+  UploadResponse,
+} from "./types";
 
 const BASE = "/api";
 
@@ -31,6 +38,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function listJobs(limit = 20): Promise<{ jobs: Job[] }> {
   return request(`/jobs?limit=${limit}`);
+}
+
+export function getResults(jobId: string): Promise<ResultsResponse> {
+  return request(`/jobs/${jobId}/results`);
+}
+
+export function getAttempts(jobId: string): Promise<{ jobId: string; attempts: Attempt[] }> {
+  return request(`/jobs/${jobId}/attempts`);
 }
 
 export function createJob(audioId: string, resultCount: number, idempotencyKey: string) {
