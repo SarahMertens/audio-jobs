@@ -1,0 +1,27 @@
+{
+  "name": "@audio-jobs/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=../../.env src/main.ts",
+    "start": "node --env-file=../../.env dist/main.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@audio-jobs/shared": "workspace:*",
+    "@aws-sdk/client-s3": "^3.1152.0",
+    "bullmq": "^6.3.16",
+    "music-metadata": "^12.2.2",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

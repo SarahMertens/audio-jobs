@@ -1,4 +1,9 @@
-import { AUDIO_QUEUE_NAME, type AudioJobMessage } from '@audio-jobs/shared';
+import {
+  AUDIO_JOB_NAME,
+  AUDIO_JOB_OPTIONS,
+  AUDIO_QUEUE_NAME,
+  type AudioJobMessage,
+} from '@audio-jobs/shared';
 import { Queue } from 'bullmq';
 import { config } from './config.js';
 
@@ -17,13 +22,9 @@ audioQueue.on('error', (err) => {
 
 export async function publishJob(jobId: string): Promise<void> {
   const add = audioQueue.add(
-    'process-audio',
+    AUDIO_JOB_NAME,
     { jobId },
-    {
-      jobId,
-      removeOnComplete: { count: 1000 },
-      removeOnFail: { count: 5000 },
-    },
+    { jobId, ...AUDIO_JOB_OPTIONS },
   );
 
   let timer: NodeJS.Timeout | undefined;

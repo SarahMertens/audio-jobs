@@ -49,3 +49,26 @@ export function toJobResponse(row: JobRow) {
     finishedAt: row.finished_at?.toISOString() ?? null,
   };
 }
+
+export type ResultRow = {
+  position: number;
+  label: string;
+  text: string | null;
+  value: string | null;
+  confidence: number;
+  start_ms: number | null;
+  end_ms: number | null;
+};
+
+export function toResultResponse(row: ResultRow) {
+  return {
+    position: row.position,
+    label: row.label,
+    text: row.text,
+    // pg returns numeric columns as strings to avoid precision loss.
+    value: row.value === null ? null : Number(row.value),
+    confidence: row.confidence,
+    startMs: row.start_ms,
+    endMs: row.end_ms,
+  };
+}

@@ -4,7 +4,14 @@ import { db } from "../clients.js";
 import { config } from "../config.js";
 import { AppError } from "../errors.js";
 import { publishJob } from "../queue.js";
-import { JOB_COLUMNS, type JobRow, statusUrl, toJobResponse } from "./job-view.js";
+import {
+  JOB_COLUMNS,
+  type JobRow,
+  type ResultRow,
+  statusUrl,
+  toJobResponse,
+  toResultResponse,
+} from "./job-view.js";
 
 const createJobBody = z.object({
   audioId: z.uuid(),
@@ -26,6 +33,14 @@ function validationError(error: z.ZodError): AppError {
     message: issue.message,
   }));
   return new AppError(400, "VALIDATION_ERROR", "The request is not valid", details);
+}
+
+async function findJobFromParams(params: unknown): Promise<JobRow> {
+  const parsed = jobIdParams.safeParse(params);
+  // An id that isn't a uuid can't exist, so answer the same way as for an unknown id.
+  const job = parsed.success ? await findJob(parsed.data.id) : undefined;
+  if (!job) throw new AppError(404, "JOB_NOT_FOUND", "No job with this id");
+  return job;
 }
 
 async function findJob(jobId: string): Promise<JobRow | undefined> {
@@ -108,11 +123,30 @@ export async function jobRoutes(app: FastifyInstance) {
   });
 
   app.get("/jobs/:id", async (request) => {
-    const params = jobIdParams.safeParse(request.params);
-    // An id that isn't a uuid can't exist, so answer the same way as for an unknown id.
-    const job = params.success ? await findJob(params.data.id) : undefined;
-    if (!job) throw new AppError(404, "JOB_NOT_FOUND", "No job with this id");
-
+    const job = await findJobFromParams(request.params);
     return toJobResponse(job);
+  });
+
+  app.get("/jobs/:id/results", async (request) => {
+    const job = await findJobFromParams(request.params);
+
+    if (job.status !== "completed") {
+      throw new AppError(409, "JOB_NOT_COMPLETED", `The job is ${job.status}, results are not available`, {
+        status: job.status,
+        statusUrl: statusUrl(job.id),
+      });
+    }
+
+    const results = await db.query<ResultRow>(
+      `SELECT position, label, text, value, confidence, start_ms, end_ms
+       FROM results WHERE job_id = $1 ORDER BY position`,
+      [job.id],
+    );
+
+    return {
+      jobId: job.id,
+      resultCount: job.result_count,
+      results: results.rows.map(toResultResponse),
+    };
   });
 }
